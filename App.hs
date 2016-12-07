@@ -1,46 +1,46 @@
-module MarsRover where
+module RoverApp where
 
 import Control.Arrow
+import RoverModules
 
-data Direction = North | South | East | West deriving (Show, Eq)
-data Position = Position Int Int deriving (Show, Eq)
-data Rover = Rover Direction Position deriving (Show, Eq)
-
-leftOf :: Direction -> Direction
-leftOf d = case d of
-	North -> West
-	East -> North
-	South -> East
-	West -> South
-
-rightOf :: Direction -> Direction
-rightOf d = case d of
-	North -> East
-	East -> South
-	South -> West
-	West -> North
-
-turnLeft :: Rover -> Rover
-turnLeft (Rover d p) = Rover (leftOf d) p
-
-turnRight :: Rover -> Rover
-turnRight (Rover d p) = Rover (rightOf d) p
-
-move :: Rover -> Rover
-move (Rover d (Position x y)) = case d of
-	North -> Rover d (Position x (y + 1))
-	East -> Rover d (Position (x + 1) y)
-	South -> Rover d (Position x (y - 1))
-	West -> Rover d (Position (x - 1) y)
+parseDirection :: String -> Direction
+parseDirection input = case input of
+  "N" -> North
+  "S" -> South
+  "E" -> East
+  "W" -> West
+  _ -> undefined
 
 getCommand :: Char -> Rover -> Rover
 getCommand instruction = case instruction of
-	'L' -> turnLeft 
-	'R' -> turnRight
-	'M' -> move
+  'L' -> turnLeft 
+  'R' -> turnRight
+  'M' -> move
+  _ -> undefined
 
-parseInstructions :: String -> Rover -> Rover
-parseInstructions instructions = foldr (>>>) id (map getCommand instructions)
+getCommandCompositionFromInstructions :: String -> Rover -> Rover
+getCommandCompositionFromInstructions instructions = foldr (>>>) id (map getCommand instructions)
 
-myRover = Rover West (Position 0 0)
-instructions = "RRMMR" --expected outcome is (Rover South Position (2 0))
+main :: IO()
+main = do
+  putStr "Enter initial direction of the rover (N - North, S - South...): " 
+  direction <- parseDirection <$> getLine
+  putStr "Enter initial X coordinate of the rover: "
+  x <- read <$> getLine
+  putStr "Enter initial Y coordinate of the rover: "
+  y <- read <$> getLine
+  let position = Position x y
+  let initialRover = Rover direction position
+  putStrLn ("The initial rover is ready: " ++ (show initialRover))
+  putStr "Now enter the sequence of instructions: "
+  composedCommandSequence <- getCommandCompositionFromInstructions <$> getLine
+  let finalRover = composedCommandSequence initialRover
+  putStrLn ("The finalRover rover is: " ++ (show finalRover))
+
+test :: IO()
+test = do
+  let myInitialRover = Rover West (Position 0 0)
+  let instructions = "RRMMR" --expected outcome is (Rover South Position (2 0))
+  let composedCommandSequence = getCommandCompositionFromInstructions instructions
+  let myFinalRover = composedCommandSequence myInitialRover
+  putStrLn (show myFinalRover)
